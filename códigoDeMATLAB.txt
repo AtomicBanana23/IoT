@@ -1,0 +1,40 @@
+
+alertChannelID = []; %Escribir la Id del canal de alertas
+getTemperatureChannelID = [];  %Escribir la Id del canal de temperatura
+meanTemperatureChannelID = []; %Escribir la Id del canal de promedio de temperaturas
+getTemperatureAPIKey = '';  %Escribir la APIKey del canal de temperatura
+meanTemperatureAPIKey = ''; %Escribir la APIKey del canal de promedio de temperaturas
+alertAPIKey = ''; %Escribir la APIKey del canal de alertas
+
+%Número de datos que les va a calcular el promedio
+numReadings = 10;
+
+%Traer los datos del canal de temperatura
+temperatureData = thingSpeakRead(getTemperatureChannelID, 'NumPoints', numReadings, 'Fields', 1, 'ReadKey', getTemperatureAPIKey);
+
+
+
+
+    %Verificar que hay suficientes datos
+    if length(temperatureData) < numReadings
+        disp('No hay suficientes datos para calcular el promedio.');
+    else
+        %Calcular el promedio
+        avgTemperature = mean(temperatureData);
+        
+        %Enviar el promedio al canal de temperatura promedio
+        response = thingSpeakWrite(meanTemperatureChannelID, avgTemperature, 'Fields', 1, 'WriteKey', meanTemperatureAPIKey);
+    
+        disp(['Promedio enviado: ', num2str(avgTemperature), ' °C']);
+        
+        %Revisamos si el promedio es más de 35 C°
+        if avgTemperature > 35
+            %Si ese es el caso se envía un 1 a alertas
+             response = thingSpeakWrite(alertChannelID, 1, 'Fields', 1, 'WriteKey', alertAPIKey);
+             
+        else 
+            %De lo contrario se envía un 0
+            response = thingSpeakWrite(alertChannelID, 0, 'Fields', 1, 'WriteKey', alertAPIKey);
+            
+        end
+    end
